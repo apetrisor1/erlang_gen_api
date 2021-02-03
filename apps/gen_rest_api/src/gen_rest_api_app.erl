@@ -5,10 +5,14 @@
 -export([stop/1]).
 
 start(_Type, _Args) ->
+	% Connect to DB
+	db:connect(localhost, 27017),
+	
+	% API routes
 	Dispatch = cowboy_router:compile([
 		{'_', [
-			{"/rest", rest_handler, []},
-			{"/http", http_handler, []}
+			{"/users", users, []},
+			{"/auth", auth, []}
 		]}
 	]),
 	{ok, _} = cowboy:start_clear(
@@ -20,8 +24,8 @@ start(_Type, _Args) ->
 			},
             middlewares => [
 				cowboy_router,
-				masterKey,
-				jwt,
+				% master_key,
+				% jwt,
 				cowboy_handler
 			]
         }

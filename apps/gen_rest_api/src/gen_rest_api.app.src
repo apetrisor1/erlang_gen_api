@@ -6,7 +6,11 @@
   {applications,
    [kernel,
     stdlib,
-    cowboy
+    bson,
+    cowboy,
+    jiffy,
+    jwerl,
+    mongodb
    ]},
   {env,[]},
   {modules, []},

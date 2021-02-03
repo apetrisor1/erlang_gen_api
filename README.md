@@ -1,9 +1,9 @@
-myserv
+gen_rest_api
 =====
-
-An OTP application
+Small back-end in Erlang.
+MongoDB, JWT , authorization, validation.
 
 Build
 -----
 
-    $ rebar3 compile
+    $ rebar3 shell

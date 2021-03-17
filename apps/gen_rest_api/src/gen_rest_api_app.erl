@@ -12,7 +12,7 @@ start(_Type, _Args) ->
 	Dispatch = cowboy_router:compile([
 		{'_', [
 			{"/users", users, []},
-			{"/auth", auth, []}
+			{"/auth/sign-up", sign_up, []}
 		]}
 	]),
 	{ok, _} = cowboy:start_clear(
@@ -24,8 +24,7 @@ start(_Type, _Args) ->
 			},
             middlewares => [
 				cowboy_router,
-				% master_key,
-				% jwt,
+				authorization,
 				cowboy_handler
 			]
         }

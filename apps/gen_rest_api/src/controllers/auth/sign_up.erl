@@ -25,23 +25,43 @@ content_types_provided(Req0, Env0) ->
 
 % Specific
 sign_up(Req0, Env0) ->
-    {ok, User0, _} = utils:read_body(Req0),
-    case User0 of
-        <<>> -> {true, Req0, Env0};
-        _ ->
-            io:format("-- ~p -- ~n ~n ", [?MODULE]),
-            UserMap = jiffy:decode(User0, [return_maps]),
-            NewUser = users_service:create(UserMap),
+    {ok, RequestBody, _} = utils:read_body(Req0),
+    process_sign_up(RequestBody, Req0, Env0).
 
-            { _, { Id } } = maps:find(<<"_id">>, NewUser),
-            Jwt = jwerl:sign([{ id, binary_to_list(Id) }]),
+process_sign_up(<<>>, Req0, Env0) ->
+    % Empty request
+    {true, Req0, Env0};
 
-            Res0 = jiffy:encode({[
-                {token, Jwt},
-                {user, UserMap}
-            ]}),
-            Req1 = cowboy_req:set_resp_body(Res0, Req0),
+process_sign_up(RequestBody, Req0, Env0) ->
+    UserBody = jiffy:decode(RequestBody, [return_maps]),
+    { _, Email } = maps:find(<<"email">>, UserBody),
+    ExistingUserWithThisEmail = users_service:find_one(#{ <<"email">> => Email }),
+    Req1 = try_adding_user(Req0, Env0, UserBody, ExistingUserWithThisEmail),
+    {stop, Req1, Env0}.
 
-            {true, Req1, Env0}
-    end.
+try_adding_user(Req0, Env0, UserBody, undefined) ->
+    confirm(Req0, Env0, UserBody);
+try_adding_user(Req0, Env0, _, _) ->
+    reject(Req0, Env0).
+
+confirm(Req0, _, UserBody) ->
+    NewUser = users_service:create(UserBody),
+    Jwt = users_service:get_jwt_for_user(NewUser),
+
+    Response = jiffy:encode({[
+        {token, Jwt},
+        {user, UserBody}
+    ]}),
+    cowboy_req:reply(200, #{
+        <<"content-type">> => <<"application/json">>
+    }, Response, Req0).
+
+reject(Req0, _) ->
+    ResponseBody = jiffy:encode({[
+        {error, <<"Email already exists">>}
+    ]}),
+
+    cowboy_req:reply(409, #{
+        <<"content-type">> => <<"application/json">>
+    }, ResponseBody, Req0).
 

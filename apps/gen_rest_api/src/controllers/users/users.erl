@@ -37,17 +37,3 @@ delete_resource(Req0, Env0) ->
     Method = maps:get(method, Req0),
     io:format("Method is ~p ~n ~n", [Method]),
     {ok, Req0, Env0}.
-
-% resource_exists(Req, {ReqPath, FilePath}) ->
-% 	case file:list_dir(FilePath) of
-% 		{ok, Fs} -> {true, Req, {ReqPath, lists:sort(Fs)}};
-% 		_Err -> {false, Req, {ReqPath, FilePath}}
-% 	end.
-
-%  Req = cowboy_req:reply(
-%       200,
-%       #{ <<"content-type">> => <<"text/plain">> },
-%       <<"Hi World!">>,
-%       Req0
-%   ),
-%   {ok, Req, Env0}.

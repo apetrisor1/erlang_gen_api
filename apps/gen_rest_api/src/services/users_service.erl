@@ -7,7 +7,7 @@
 % - assigns defaults
 % - calls db service with the body to be added.
 
--export([ create/1, find_by_id/1, find_one/1 ]).
+-export([ create/1, find_by_id/1, find_one/1, get_jwt_for_user/1 ]).
 
 create(User0) ->
     % TODO: Validate.
@@ -20,3 +20,7 @@ find_by_id(Id) ->
 
 find_one(Query) ->
     db:find_one(<<"users">>, Query).
+
+get_jwt_for_user(User) ->
+    { _, { Id } } = maps:find(<<"_id">>, User),
+    jwerl:sign([{ id, binary_to_list(Id) }]).

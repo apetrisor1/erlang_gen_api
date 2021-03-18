@@ -9,24 +9,21 @@ getMasterKeyProtectedRoutes() ->
 execute(Req0, Env0) ->
     #{path := Path} = Req0,
     IsMasterKeyProtected = lists:member(Path, getMasterKeyProtectedRoutes()),
+    select_strategy(Req0, Env0, IsMasterKeyProtected).
 
-    case IsMasterKeyProtected of
-        true -> master_key(Req0, Env0);
-        false -> jwt(Req0, Env0)
-    end.
-
+select_strategy(Req0, Env0, true) ->
+    master_key(Req0, Env0);
+select_strategy(Req0, Env0, false) ->
+    jwt(Req0, Env0).
 
 master_key(Req0, Env0) ->
     	case cowboy_req:parse_header(<<"authorization">>, Req0) of
 		{ bearer, <<"masterKey">> } ->
-			io:format("masterKey OK ~n"),
 			{ ok, Req0, Env0 };
 		_ ->
-			io:format("masterKey NOT OK ~n"),
 			Req = cowboy_req:reply(401, Req0),
 			{ stop, Req }
-	end.
-
+	    end.
 
 jwt(Req0, Env0) ->
     { bearer, Token } = cowboy_req:parse_header(<<"authorization">>, Req0),

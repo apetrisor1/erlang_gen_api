@@ -22,6 +22,7 @@ content_types_accepted(Req0, Env0) ->
 content_types_provided(Req0, Env0) ->
 	{[ {{<<"application">>, <<"json">>, []}, get_json}], Req0, Env0}.
 
+% Placeholders for handlers, TODO
 get_json(Req0, Env0) ->
     Method = maps:get(method, Req0),
     io:format("Method is ~p ~n ~n", [Method]),

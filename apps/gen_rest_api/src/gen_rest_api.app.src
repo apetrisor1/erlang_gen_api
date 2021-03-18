@@ -6,6 +6,7 @@
   {applications,
    [kernel,
     stdlib,
+    bcrypt,
     bson,
     cowboy,
     jiffy,

@@ -1,18 +1,27 @@
 -module(users_service).
-
 % This service gets called from the user and auth controllers.
-
 % When creating/updating a user, service:
 % - validates user input
 % - assigns defaults
 % - calls db service with the body to be added.
-
--export([ create/1, find_by_id/1, find_one/1, get_jwt_for_user/1 ]).
+-export([
+    create/1,
+    find_by_id/1,
+    find_one/1,
+    get_jwt_for_user/1,
+    view/1
+]).
 
 create(User0) ->
     % TODO: Validate.
     % Set up a user model that exports its' name, so we may use it as collection name.
-    { _, User } = db:insert_one(<<"users">>, User0),
+    {Password, UserWithoutPass} = maps:take(<<"password">>, User0),
+    {ok, Salt} = bcrypt:gen_salt(),
+    {ok, Hash} = bcrypt:hashpw(Password, Salt),
+    { _, User } = db:insert_one(
+        <<"users">>,
+        maps:put(<<"password">>, Hash, UserWithoutPass)
+    ),
     User.
 
 find_by_id(Id) ->
@@ -24,3 +33,6 @@ find_one(Query) ->
 get_jwt_for_user(User) ->
     { _, { Id } } = maps:find(<<"_id">>, User),
     jwerl:sign([{ id, binary_to_list(Id) }]).
+
+view(User) ->
+    maps:without([<<"_id">>, <<"password">>], User).

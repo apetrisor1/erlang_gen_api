@@ -11,7 +11,10 @@ start(_Type, _Args) ->
 	% API routes
 	Dispatch = cowboy_router:compile([
 		{'_', [
+			% JWT
 			{"/users", users, []},
+			% Master Key
+			{"/auth/sign-in", sign_in, []},
 			{"/auth/sign-up", sign_up, []}
 		]}
 	]),

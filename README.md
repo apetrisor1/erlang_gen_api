@@ -16,7 +16,7 @@ Mongo:
 
 Make sure mongo daemon is running locally, connect(localhost, 27017) in db.erl
 
-Postgres: 
+TODO: Link app to postgress.
 
 You can spin up the postgres Docker image locally using
 ```

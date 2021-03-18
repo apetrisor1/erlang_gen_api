@@ -25,6 +25,8 @@ content_types_provided(Req0, Env0) ->
 
 % Specific
 sign_up(Req0, Env0) ->
+    io:format("-- MODULE ~p -- ~n ", [?MODULE]),
+    io:format("-- SELF ~p -- ~n ", [self()]),
     {ok, RequestBody, _} = utils:read_body(Req0),
     process_sign_up(RequestBody, Req0, Env0).
 
@@ -32,9 +34,10 @@ process_sign_up(<<>>, Req0, Env0) ->
     % Empty request
     {true, Req0, Env0};
 
+% TODO: Make email and password required
 process_sign_up(RequestBody, Req0, Env0) ->
     UserBody = jiffy:decode(RequestBody, [return_maps]),
-    { _, Email } = maps:find(<<"email">>, UserBody),
+    Email = maps:get(<<"email">>, UserBody),
     ExistingUserWithThisEmail = users_service:find_one(#{ <<"email">> => Email }),
     Req1 = try_adding_user(Req0, Env0, UserBody, ExistingUserWithThisEmail),
     {stop, Req1, Env0}.
@@ -46,11 +49,9 @@ try_adding_user(Req0, Env0, _, _) ->
 
 confirm(Req0, _, UserBody) ->
     NewUser = users_service:create(UserBody),
-    Jwt = users_service:get_jwt_for_user(NewUser),
-
     Response = jiffy:encode({[
-        {token, Jwt},
-        {user, UserBody}
+        {token, users_service:get_jwt_for_user(NewUser)},
+        {user, users_service:view(NewUser)} 
     ]}),
     cowboy_req:reply(200, #{
         <<"content-type">> => <<"application/json">>

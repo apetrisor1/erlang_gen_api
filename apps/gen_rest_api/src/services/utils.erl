@@ -1,6 +1,12 @@
 -module(utils).
 
--export([read_body/1]).
+-export([
+    compare_passwords/2,
+    read_body/1    
+]).
+
+compare_passwords(P1, P2) ->
+    { ok, P2 } =:= bcrypt:hashpw(P1, P2).
 
 % Cowboy specific
 read_body(Req0) -> read_body(Req0, <<>>).

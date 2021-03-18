@@ -31,7 +31,6 @@ sign_in(Req0, Env0) ->
 sign_in(<<>>, Req0, Env0) ->
     % Empty request
     { true, Req0, Env0 };
-
 sign_in(RequestBody, Req0, Env0) ->
   % TODO: Make email and password required
     Credentials  = jiffy:decode(RequestBody, [return_maps]),
@@ -40,14 +39,15 @@ sign_in(RequestBody, Req0, Env0) ->
     ExistingUser = users_service:find_one(#{ <<"email">> => Email }),
     ExistingPass = maps:get(<<"password">>, ExistingUser),
 
-    Req1 = try_sign_in(
-        compare(Password, ExistingPass),
+    Req1 = sign_in(
+        'passwordsMatch?',
+        utils:compare_passwords(Password, ExistingPass),
         ExistingUser,
         Req0
     ),
     { stop, Req1, Env0 }.
 
-try_sign_in(false, _, Req0) ->
+sign_in('passwordsMatch?', false, _, Req0) ->
     cowboy_req:reply(401, #{
         <<"content-type">> => <<"application/json">>
     },
@@ -55,16 +55,12 @@ try_sign_in(false, _, Req0) ->
         { error, <<"Wrong email/password">> }
     ]})
     , Req0);
-
-try_sign_in(true, User, Req0) ->
+sign_in('passwordsMatch?', true, User, Req0) ->
   cowboy_req:reply(200, #{
         <<"content-type">> => <<"application/json">>
     },
     jiffy:encode({[
-        { token, users_service:get_jwt_for_user(User) },
+        { token, users_service:get_jwt(User) },
         { user, users_service:view(User) } 
     ]})
     , Req0).
-
-compare(Pass1, Pass2) ->
-    { ok, Pass2 } =:= bcrypt:hashpw(Pass1, Pass2).

@@ -8,16 +8,16 @@
     create/1,
     find_by_id/1,
     find_one/1,
-    get_jwt_for_user/1,
+    get_jwt/1,
     view/1
 ]).
 
 create(UserBody) ->
     % TODO: Validate.
     % Set up a user model that exports its' name, so we may use it as collection name.
-    {Password, UserWithoutPass} = maps:take(<<"password">>, UserBody),
-    {ok, Salt} = bcrypt:gen_salt(),
-    {ok, Hash} = bcrypt:hashpw(Password, Salt),
+    { Password, UserWithoutPass } = maps:take(<<"password">>, UserBody),
+    { ok, Salt } = bcrypt:gen_salt(),
+    { ok, Hash } = bcrypt:hashpw(Password, Salt),
     { _, User } = db:insert_one(
         <<"users">>,
         maps:put(<<"password">>, Hash, UserWithoutPass)
@@ -30,7 +30,7 @@ find_by_id(Id) ->
 find_one(Query) ->
     db:find_one(<<"users">>, Query).
 
-get_jwt_for_user(User) ->
+get_jwt(User) ->
     { _, { Id } } = maps:find(<<"_id">>, User),
     jwerl:sign([{ id, binary_to_list(Id) }], hs256, <<"secretKey">>).
 

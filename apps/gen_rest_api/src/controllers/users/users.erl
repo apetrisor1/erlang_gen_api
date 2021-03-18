@@ -22,9 +22,9 @@ content_types_accepted(Req0, Env0) ->
 content_types_provided(Req0, Env0) ->
 	{ [ { { <<"application">>, <<"json">>, [] }, get_json } ], Req0, Env0 }.
 
-% Placeholders for handlers, TODO
+% TODO Users controllers
 get_json(Req0, Env0) ->
-	  { <<"{\"rest\": \"Getting stuff!\"}">>, Req0, Env0 }.
+    { <<"{\"rest\": \"Getting stuff!\"}">>, Req0, Env0 }.
 
 post_json(Req0, Env0) ->
     { true, Req0, Env0 }.

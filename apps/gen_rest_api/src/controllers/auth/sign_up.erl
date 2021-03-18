@@ -37,18 +37,18 @@ sign_up(RequestBody, Req0, Env0) ->
     Email        = maps:get(<<"email">>, UserBody),
     ExistingUser = users_service:find_one(#{ <<"email">> => Email }),
 
-    Req1 = try_sign_up(Req0, Env0, UserBody, ExistingUser),
+    Req1 = sign_up(Req0, Env0, UserBody, ExistingUser),
     { stop, Req1, Env0 }.
 
-try_sign_up(Req0, Env0, UserBody, undefined) ->
+sign_up(Req0, Env0, UserBody, undefined) ->
     allow(Req0, Env0, UserBody);
-try_sign_up(Req0, Env0, _, _) ->
+sign_up(Req0, Env0, _, _) ->
     reject(Req0, Env0).
 
 allow(Req0, _, UserBody) ->
     NewUser = users_service:create(UserBody),
     Response = jiffy:encode({[
-        { token, users_service:get_jwt_for_user(NewUser) },
+        { token, users_service:get_jwt(NewUser) },
         { user, users_service:view(NewUser) } 
     ]}),
     cowboy_req:reply(200, #{

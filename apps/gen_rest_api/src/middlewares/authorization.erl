@@ -11,12 +11,16 @@ getMasterKeyProtectedRoutes() ->
 
 execute(Req0, Env0) ->
     #{ path := Path } = Req0,
-    IsMasterKeyProtected = lists:member(Path, getMasterKeyProtectedRoutes()),
-    select_strategy(Req0, Env0, IsMasterKeyProtected).
+    select_strategy(
+        'isMasterKeyProtected?',
+        lists:member(Path, getMasterKeyProtectedRoutes()),
+        Req0,
+        Env0
+    ).
 
-select_strategy(Req0, Env0, true) ->
+select_strategy('isMasterKeyProtected?', true, Req0, Env0) ->
     master_key(Req0, Env0);
-select_strategy(Req0, Env0, false) ->
+select_strategy('isMasterKeyProtected?', false, Req0, Env0) ->
     jwt(Req0, Env0).
 
 master_key(Req0, Env0) ->
@@ -34,6 +38,7 @@ authenticate_master_key(_, Req0, _) ->
     Req = cowboy_req:reply(401, Req0),
     { stop, Req }.
 
+% TODO Add user to request state
 authenticate_jwt({ ok, _ }, Req0, Env0) ->
     { ok, Req0, Env0 };
 authenticate_jwt(_, Req0, _) ->

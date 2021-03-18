@@ -6,52 +6,50 @@
 -export([content_types_provided/2]).
 -export([sign_up/2]).
 
-% Generic
 init(Req0, Opts) ->
-	{cowboy_rest, Req0, Opts}.
+	{ cowboy_rest, Req0, Opts }.
 
-allowed_methods(Req, State) ->
-	{[<<"POST">>], Req, State}.
+allowed_methods(Req0, Env0) ->
+	{ [<<"POST">>], Req0, Env0 }.
 
-content_types_accepted(Req, State) ->
+content_types_accepted(Req0, Env0) ->
   {[
-    {{<<"application">>, <<"json">>, []}, sign_up}
-  ], Req, State}.
+    {{ <<"application">>, <<"json">>, [] }, sign_up }
+  ], Req0, Env0}.
 
 content_types_provided(Req0, Env0) ->
 	{[
-		{{<<"application">>, <<"json">>, []}, sign_up}
+		{{ <<"application">>, <<"json">>, [] }, sign_up }
 	], Req0, Env0}.
 
-% Specific
 sign_up(Req0, Env0) ->
     io:format("-- MODULE ~p -- ~n ", [?MODULE]),
     io:format("-- SELF ~p -- ~n ", [self()]),
-    {ok, RequestBody, _} = utils:read_body(Req0),
-    process_sign_up(RequestBody, Req0, Env0).
+    { ok, RequestBody, _ } = utils:read_body(Req0),
+    sign_up(RequestBody, Req0, Env0).
 
-process_sign_up(<<>>, Req0, Env0) ->
+sign_up(<<>>, Req0, Env0) ->
     % Empty request
-    {true, Req0, Env0};
+    { true, Req0, Env0 };
+sign_up(RequestBody, Req0, Env0) ->
+    % TODO: Make email and password required
+    UserBody     = jiffy:decode(RequestBody, [return_maps]),
+    Email        = maps:get(<<"email">>, UserBody),
+    ExistingUser = users_service:find_one(#{ <<"email">> => Email }),
 
-% TODO: Make email and password required
-process_sign_up(RequestBody, Req0, Env0) ->
-    UserBody = jiffy:decode(RequestBody, [return_maps]),
-    Email = maps:get(<<"email">>, UserBody),
-    ExistingUserWithThisEmail = users_service:find_one(#{ <<"email">> => Email }),
-    Req1 = try_adding_user(Req0, Env0, UserBody, ExistingUserWithThisEmail),
-    {stop, Req1, Env0}.
+    Req1 = try_sign_up(Req0, Env0, UserBody, ExistingUser),
+    { stop, Req1, Env0 }.
 
-try_adding_user(Req0, Env0, UserBody, undefined) ->
-    confirm(Req0, Env0, UserBody);
-try_adding_user(Req0, Env0, _, _) ->
+try_sign_up(Req0, Env0, UserBody, undefined) ->
+    allow(Req0, Env0, UserBody);
+try_sign_up(Req0, Env0, _, _) ->
     reject(Req0, Env0).
 
-confirm(Req0, _, UserBody) ->
+allow(Req0, _, UserBody) ->
     NewUser = users_service:create(UserBody),
     Response = jiffy:encode({[
-        {token, users_service:get_jwt_for_user(NewUser)},
-        {user, users_service:view(NewUser)} 
+        { token, users_service:get_jwt_for_user(NewUser) },
+        { user, users_service:view(NewUser) } 
     ]}),
     cowboy_req:reply(200, #{
         <<"content-type">> => <<"application/json">>
@@ -59,7 +57,7 @@ confirm(Req0, _, UserBody) ->
 
 reject(Req0, _) ->
     ResponseBody = jiffy:encode({[
-        {error, <<"Email already exists">>}
+        { error, <<"Email already exists">> }
     ]}),
 
     cowboy_req:reply(409, #{

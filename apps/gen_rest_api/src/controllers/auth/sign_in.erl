@@ -23,8 +23,8 @@ content_types_provided(Req0, Env0) ->
 	], Req0, Env0}.
 
 sign_in(Req0, Env0) ->
-    io:format("-- MODULE ~p -- ~n ", [?MODULE]),
-    io:format("-- SELF ~p -- ~n ", [self()]),
+    io:format("-- ~p -- ~n", [?MODULE]),
+    io:format("-- ~p -- ~n~n", [self()]),
     { ok, RequestBody, _ } = utils:read_body(Req0),
     sign_in(RequestBody, Req0, Env0).
 

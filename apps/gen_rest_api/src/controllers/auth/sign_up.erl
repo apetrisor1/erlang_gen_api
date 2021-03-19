@@ -13,9 +13,9 @@ allowed_methods(Req0, Env0) ->
 	{ [<<"POST">>], Req0, Env0 }.
 
 content_types_accepted(Req0, Env0) ->
-  {[
-    {{ <<"application">>, <<"json">>, [] }, sign_up }
-  ], Req0, Env0}.
+    {[
+        {{ <<"application">>, <<"json">>, [] }, sign_up }
+    ], Req0, Env0}.
 
 content_types_provided(Req0, Env0) ->
 	{[
@@ -23,8 +23,8 @@ content_types_provided(Req0, Env0) ->
 	], Req0, Env0}.
 
 sign_up(Req0, Env0) ->
-    io:format("-- MODULE ~p -- ~n ", [?MODULE]),
-    io:format("-- SELF ~p -- ~n ", [self()]),
+    io:format("-- ~p -- ~n", [?MODULE]),
+    io:format("-- ~p -- ~n~n", [self()]),
     { ok, RequestBody, _ } = utils:read_body(Req0),
     sign_up(RequestBody, Req0, Env0).
 
@@ -35,17 +35,22 @@ sign_up(RequestBody, Req0, Env0) ->
     % TODO: Make email and password required
     UserBody     = jiffy:decode(RequestBody, [return_maps]),
     Email        = maps:get(<<"email">>, UserBody),
-    ExistingUser = users_service:find_one(#{ <<"email">> => Email }),
 
-    Req1 = sign_up(Req0, Env0, UserBody, ExistingUser),
+    Req1 = sign_up(
+        UserBody,
+        userWithThisEmail,
+        users_service:find_one(#{ <<"email">> => Email }),
+        Req0,
+        Env0    
+    ),
     { stop, Req1, Env0 }.
 
-sign_up(Req0, Env0, UserBody, undefined) ->
-    allow(Req0, Env0, UserBody);
-sign_up(Req0, Env0, _, _) ->
+sign_up(UserBody, userWithThisEmail, undefined, Req0, Env0) ->
+    allow(UserBody, Req0, Env0);
+sign_up(_UserBody, userWithThisEmail, _, Req0, Env0) ->
     reject(Req0, Env0).
 
-allow(Req0, _, UserBody) ->
+allow(UserBody, Req0, _Env0) ->
     NewUser = users_service:create(UserBody),
     Response = jiffy:encode({[
         { token, users_service:get_jwt(NewUser) },
@@ -55,7 +60,7 @@ allow(Req0, _, UserBody) ->
         <<"content-type">> => <<"application/json">>
     }, Response, Req0).
 
-reject(Req0, _) ->
+reject(Req0, _Env0) ->
     ResponseBody = jiffy:encode({[
         { error, <<"Email already exists">> }
     ]}),

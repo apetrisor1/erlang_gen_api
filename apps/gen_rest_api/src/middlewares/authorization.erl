@@ -4,10 +4,8 @@
 -export([execute/2]).
 
 getMasterKeyProtectedRoutes() ->
-    [
-        <<"/auth/sign-in">>,
-        <<"/auth/sign-up">>
-    ].
+    [<<"/auth/sign-in">>,
+    <<"/auth/sign-up">>].
 
 execute(Req0, Env0) ->
     #{ path := Path } = Req0,

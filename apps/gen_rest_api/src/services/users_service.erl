@@ -18,7 +18,7 @@ create(UserBody) ->
     { Password, UserWithoutPass } = maps:take(<<"password">>, UserBody),
     { ok, Salt } = bcrypt:gen_salt(),
     { ok, Hash } = bcrypt:hashpw(Password, Salt),
-    { _, User } = db:insert_one(
+    { _, User }  = db:insert_one(
         <<"users">>,
         maps:put(<<"password">>, Hash, UserWithoutPass)
     ),

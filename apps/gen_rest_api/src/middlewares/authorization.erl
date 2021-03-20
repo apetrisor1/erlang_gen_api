@@ -37,8 +37,8 @@ authenticate_master_key(_, Req0, _) ->
     { stop, Req }.
 
 % TODO Add user to request state
-authenticate_jwt({ ok, _ }, Req0, Env0) ->
-    { ok, Req0, Env0 };
+authenticate_jwt({ ok, User }, Req0, Env0) ->
+    { ok, maps:put(thisUser, User, Req0), Env0 };
 authenticate_jwt(_, Req0, _) ->
     Req1 = cowboy_req:reply(401, Req0),
     { stop, Req1 }.
